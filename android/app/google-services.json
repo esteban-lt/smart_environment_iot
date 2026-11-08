@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "984730819110",
+    "project_id": "smart-environment-iot-7ddc3",
+    "storage_bucket": "smart-environment-iot-7ddc3.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:984730819110:android:83007d0efe1e71f66e24e7",
+        "android_client_info": {
+          "package_name": "com.esteban.smart_environment_iot"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAjF-HyBdTNEANLf--vGR3k4p6V4tKYLCo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

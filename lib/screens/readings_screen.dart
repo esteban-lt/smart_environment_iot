@@ -3,6 +3,7 @@ import 'package:uuid/uuid.dart';
 
 import '../db/database_helper.dart';
 import '../models/sensor_reading.dart';
+import '../sync/sync_service.dart';
 
 /// CRUD de lecturas: lista (READ), botón + (CREATE), tocar una fila (UPDATE)
 /// e icono de basura (DELETE).
@@ -86,6 +87,7 @@ class _ReadingsScreenState extends State<ReadingsScreen> {
     ));
     _snack('Lectura creada');
     _refresh();
+    SyncService.instance.onLocalChange();
   }
 
   Future<void> _edit(SensorReading r) async {
@@ -95,6 +97,7 @@ class _ReadingsScreenState extends State<ReadingsScreen> {
     await _db.updateReading(r.copyWith(value: res.$1, ubicacionNodo: res.$2));
     _snack('Lectura #${r.id} actualizada');
     _refresh();
+    SyncService.instance.onLocalChange();
   }
 
   Future<void> _delete(SensorReading r) async {

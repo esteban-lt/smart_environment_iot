@@ -251,6 +251,85 @@ class DatabaseHelper {
     return await db.delete('readings', where: 'id = ?', whereArgs: [id]);
   }
 
+  // ---------------------------------------------------------------------------
+  // Sincronización (Actividad 4)
+  // ---------------------------------------------------------------------------
+
+  /// Lecturas que todavía no suben a la nube (`synced = 0`).
+  Future<List<SensorReading>> getPendingReadings() async {
+    final db = await instance.database;
+    final rows = await db.query('readings',
+        where: 'synced = ?', whereArgs: [0], orderBy: 'id');
+    return rows.map(SensorReading.fromMap).toList();
+  }
+
+  Future<SensorReading?> getByUuid(String uuid) async {
+    final db = await instance.database;
+    final rows =
+        await db.query('readings', where: 'uuid = ?', whereArgs: [uuid]);
+    return rows.isEmpty ? null : SensorReading.fromMap(rows.first);
+  }
+
+  /// Cuántas lecturas hay pendientes y cuántas ya se sincronizaron.
+  Future<({int pending, int synced})> syncCounts() async {
+    final db = await instance.database;
+    final rows = await db.rawQuery(
+        'SELECT synced, COUNT(*) AS n FROM readings GROUP BY synced');
+    var pending = 0, synced = 0;
+    for (final r in rows) {
+      if (r['synced'] == 1) {
+        synced = r['n'] as int;
+      } else {
+        pending = r['n'] as int;
+      }
+    }
+    return (pending: pending, synced: synced);
+  }
+
+  /// Marca como sincronizada SOLO si nadie la editó mientras subía
+  /// (mismo `updated_at`). Si cambió, se queda pendiente para la próxima vuelta.
+  Future<int> markSynced(String uuid, int updatedAt) async {
+    final db = await instance.database;
+    return await db.update('readings', {'synced': 1},
+        where: 'uuid = ? AND updated_at = ?', whereArgs: [uuid, updatedAt]);
+  }
+
+  /// Last-Write-Wins cuando gana la nube: se copia la versión remota a la
+  /// fila local y queda como sincronizada.
+  Future<int> applyRemote(String uuid, Map<String, dynamic> remote) async {
+    final db = await instance.database;
+    return await db.update(
+      'readings',
+      {
+        'value': (remote['value'] as num).toDouble(),
+        'is_alert': remote['is_alert'] == true ? 1 : 0,
+        'ubicacion_nodo': remote['ubicacion_nodo'],
+        'updated_at': (remote['updated_at'] as num).toInt(),
+        'synced': 1,
+      },
+      where: 'uuid = ?',
+      whereArgs: [uuid],
+    );
+  }
+
+  /// Solo para la demo de conflictos: edita una lectura local con un
+  /// `updated_at` elegido (p. ej. "hace 10 minutos", estando offline).
+  Future<int> editLocalAt(String uuid,
+      {required double value, required int updatedAt, String? ubicacion}) async {
+    final db = await instance.database;
+    return await db.update(
+      'readings',
+      {
+        'value': value,
+        'updated_at': updatedAt,
+        'synced': 0,
+        'ubicacion_nodo': ?ubicacion,
+      },
+      where: 'uuid = ?',
+      whereArgs: [uuid],
+    );
+  }
+
   /// Número de lecturas guardadas.
   Future<int> countReadings() async {
     final db = await instance.database;

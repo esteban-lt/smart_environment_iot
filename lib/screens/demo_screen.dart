@@ -7,6 +7,8 @@ import 'package:uuid/uuid.dart';
 import '../db/database_helper.dart';
 import '../demo/sql_injection_demo.dart';
 import '../models/sensor_reading.dart';
+import '../sensors/sensor_ingest_service.dart';
+import '../sync/sync_service.dart';
 import '../storage/csv_node_manager.dart';
 import '../storage/preferences_storage.dart';
 
@@ -23,6 +25,7 @@ class _DemoScreenState extends State<DemoScreen> {
   final _db = DatabaseHelper.instance;
   final _prefs = PreferencesStorage();
   final _csv = CsvNodeManager();
+  final _ingest = SensorIngestService();
   Map<String, dynamic>? _info;
   String _log = '';
   bool? _ok; // icono verde/rojo del panel (null = sin icono)
@@ -229,6 +232,47 @@ class _DemoScreenState extends State<DemoScreen> {
             '(de $before a $after).');
   }
 
+  // ------------------------------------------------------- Sincronización ---
+
+  /// Prueba 4.3: el sensor manda 5 alertas. Se guardan en SQLite; si no hay
+  /// red se quedan pendientes, si hay red se suben solas.
+  Future<void> _generateFive() async {
+    final r = await _ingest.ingest(_ingest.fiveAlerts());
+    await _refresh();
+    final sync = SyncService.instance;
+    _setLog(
+        '${r.total} lecturas del sensor guardadas en SQLite (${r.alerts} alertas)\n'
+        '${sync.online ? "Hay red: se sincronizan en automático." : "SIN RED: quedan con synced = 0 (pendientes)."}\n'
+        '${SensorIngestService.lastUuids.map((u) => '  • ${u.substring(0, 8)}…').join('\n')}');
+  }
+
+  Future<void> _showPending() async {
+    final pending = await _db.getPendingReadings();
+    final c = await _db.syncCounts();
+    _setLog('SQLite → pendientes (synced = 0): ${c.pending} · '
+        'sincronizadas: ${c.synced}\n'
+        '${pending.map((r) => '  • ${r.uuid.substring(0, 8)}…  ${r.value} °C'
+            '${r.isAlert ? "  ALERTA" : ""}').join('\n')}');
+  }
+
+  Future<void> _cloudReport() async {
+    try {
+      _setLog(await SyncService.instance
+          .cloudReport(SensorIngestService.lastUuids));
+    } catch (e) {
+      _setLog('No se pudo consultar Firestore: $e', ok: false);
+    }
+  }
+
+  Future<void> _demoLww() async {
+    try {
+      _setLog(await SyncService.instance.demoLastWriteWins());
+    } catch (e) {
+      _setLog('No se pudo completar la demo: $e', ok: false);
+    }
+    await _refresh();
+  }
+
   // ------------------------------------------------------------------ SQLi ---
 
   Future<void> _sqlInjection({required bool vulnerable}) async {
@@ -290,6 +334,19 @@ class _DemoScreenState extends State<DemoScreen> {
                         ),
                 ),
               ),
+              _section('Sincronización offline-first (Actividad 4)', [
+                FilledButton(
+                    onPressed: _generateFive,
+                    child: const Text('Generar 5 alertas')),
+                OutlinedButton(
+                    onPressed: _showPending,
+                    child: const Text('Ver pendientes')),
+                OutlinedButton(
+                    onPressed: _cloudReport,
+                    child: const Text('Ver en Firestore')),
+                OutlinedButton(
+                    onPressed: _demoLww, child: const Text('Probar LWW')),
+              ]),
               _section('Base de datos', [
                 FilledButton(
                     onPressed: _loadV1Data,
