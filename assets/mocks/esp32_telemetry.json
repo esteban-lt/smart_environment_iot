@@ -1,0 +1,16 @@
+{
+  "_comment": "Mensajes tal como los publicaria el firmware del ESP32 en el broker MQTT (topic smartenv/<device_id>/telemetry). ts = epoch en segundos (NTP). El simulador reemplaza ts por la hora actual al emitirlos.",
+  "topic": "smartenv/+/telemetry",
+  "messages": [
+    { "device_id": "ESP32_01", "sensor": "temperature", "value": 24.8, "unit": "C", "ts": 1794100000, "location": "Invernadero A" },
+    { "device_id": "ESP32_02", "sensor": "temperature", "value": 29.3, "unit": "C", "ts": 1794100030, "location": "Invernadero B" },
+    { "device_id": "ESP32_01", "sensor": "temperature", "value": 35.0, "unit": "C", "ts": 1794100060, "location": "Invernadero A" },
+    { "device_id": "ESP32_02", "sensor": "temperature", "value": 36.2, "unit": "C", "ts": 1794100090, "location": "Invernadero B" },
+    { "device_id": "ESP32_01", "sensor": "temperature", "value": 31.7, "unit": "C", "ts": 1794100120, "location": "Invernadero A" },
+    { "device_id": "ESP32_02", "sensor": "temperature", "value": 38.9, "unit": "C", "ts": 1794100150, "location": "Invernadero B" },
+    { "device_id": "ESP32_01", "sensor": "temperature", "value": 27.4, "unit": "C", "ts": 1794100180, "location": "Invernadero A" },
+    { "device_id": "ESP32_01", "sensor": "temperature", "value": 35.6, "unit": "C", "ts": 1794100210, "location": "Invernadero A" },
+    { "device_id": "ESP32_02", "sensor": "temperature", "value": 33.1, "unit": "C", "ts": 1794100240, "location": "Invernadero B" },
+    { "device_id": "ESP32_02", "sensor": "temperature", "value": 41.2, "unit": "C", "ts": 1794100270, "location": "Invernadero B" }
+  ]
+}

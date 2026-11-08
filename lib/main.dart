@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'screens/demo_screen.dart';
+import 'screens/historical_alerts_screen.dart';
 import 'screens/readings_screen.dart';
 
 void main() {
@@ -31,17 +32,23 @@ class HomeShell extends StatefulWidget {
 }
 
 class _HomeShellState extends State<HomeShell> {
-  int _index = 1;
+  int _index = 0;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       // Se reconstruye la pestaña al cambiar, así cada una lee la BD fresca.
-      body: [const ReadingsScreen(), const DemoScreen()][_index],
+      body: [
+        const HistoricalAlertsScreen(),
+        const ReadingsScreen(),
+        const DemoScreen(),
+      ][_index],
       bottomNavigationBar: NavigationBar(
         selectedIndex: _index,
         onDestinationSelected: (i) => setState(() => _index = i),
         destinations: const [
+          NavigationDestination(
+              icon: Icon(Icons.notifications_active_outlined), label: 'Alertas'),
           NavigationDestination(icon: Icon(Icons.list_alt), label: 'Lecturas'),
           NavigationDestination(icon: Icon(Icons.science), label: 'Demo'),
         ],

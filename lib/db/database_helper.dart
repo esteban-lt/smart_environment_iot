@@ -164,6 +164,13 @@ class DatabaseHelper {
     return (rows.first['temp_threshold'] as num).toDouble();
   }
 
+  /// Cambia el umbral de temperatura de todos los nodos (configurable desde
+  /// el histórico). Aplica a las lecturas que lleguen después.
+  Future<int> setThresholdForAll(double threshold) async {
+    final db = await instance.database;
+    return await db.update('nodes', {'temp_threshold': threshold});
+  }
+
   /// Crea el nodo solo si no existe (no toca su nombre ni su umbral).
   Future<void> ensureNode(String id) async {
     final db = await instance.database;
@@ -259,6 +266,18 @@ class DatabaseHelper {
       'readings',
       where: 'sensorType = ?',
       whereArgs: [type],
+      orderBy: 'id DESC',
+    );
+    return result.map(SensorReading.fromMap).toList();
+  }
+
+  /// Solo las lecturas marcadas como alerta (para el filtro del histórico).
+  Future<List<SensorReading>> getAlerts() async {
+    final db = await instance.database;
+    final result = await db.query(
+      'readings',
+      where: 'is_alert = ?',
+      whereArgs: [1],
       orderBy: 'id DESC',
     );
     return result.map(SensorReading.fromMap).toList();
