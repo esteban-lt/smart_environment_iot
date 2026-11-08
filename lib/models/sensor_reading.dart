@@ -6,6 +6,7 @@
 /// - `nodeId`: FK al nodo que generó la lectura.
 /// - `isAlert`: 1 si la lectura superó el umbral del nodo.
 /// - `synced` / `updatedAt`: control de sincronización (offline-first).
+/// - `ubicacionNodo`: dónde está el nodo (columna agregada en la migración v1 → v2).
 class SensorReading {
   final int? id;
   final String uuid;
@@ -16,6 +17,7 @@ class SensorReading {
   final bool isAlert;
   final bool synced;
   final int updatedAt; // epoch en milisegundos, para Last-Write-Wins
+  final String? ubicacionNodo; // v2
 
   SensorReading({
     this.id,
@@ -27,10 +29,13 @@ class SensorReading {
     this.isAlert = false,
     this.synced = false,
     required this.updatedAt,
+    this.ubicacionNodo,
   });
 
   Map<String, dynamic> toMap() {
     return {
+      // Si no se manda ubicación, se omite la llave para que SQLite use el DEFAULT.
+      if (ubicacionNodo != null) 'ubicacion_nodo': ubicacionNodo,
       'id': id,
       'uuid': uuid,
       'node_id': nodeId,
@@ -54,6 +59,24 @@ class SensorReading {
       isAlert: map['is_alert'] == 1,
       synced: map['synced'] == 1,
       updatedAt: map['updated_at'] as int,
+      ubicacionNodo: map['ubicacion_nodo'] as String?,
+    );
+  }
+
+  /// Copia con cambios (para el UPDATE del CRUD).
+  SensorReading copyWith({double? value, String? ubicacionNodo, bool? isAlert,
+      bool? synced, int? updatedAt}) {
+    return SensorReading(
+      id: id,
+      uuid: uuid,
+      nodeId: nodeId,
+      sensorType: sensorType,
+      value: value ?? this.value,
+      timestamp: timestamp,
+      isAlert: isAlert ?? this.isAlert,
+      synced: synced ?? this.synced,
+      updatedAt: updatedAt ?? this.updatedAt,
+      ubicacionNodo: ubicacionNodo ?? this.ubicacionNodo,
     );
   }
 }
